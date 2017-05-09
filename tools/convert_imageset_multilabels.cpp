@@ -82,10 +82,11 @@ int main(int argc, char** argv) {
     std::getline(ss, fileloc, delim); 
     std::getline(ss, label_1, delim);
     std::getline(ss, label_2, delim);
-    std::getline(ss, label_3, delim);
+//    std::getline(ss, label_3, delim);
 
     lines.push_back(std::make_pair(fileloc, 0));
-    labels.push_back(std::make_pair(atoi(label_1.c_str()), atoi(label_2.c_str())*4+atoi(label_3.c_str())));
+//    labels.push_back(std::make_pair(atoi(label_1.c_str()), atoi(label_2.c_str())*4+atoi(label_3.c_str())));
+    labels.push_back(std::make_pair(atoi(label_1.c_str()), atoi(label_2.c_str())));
   }
 
 // debug
