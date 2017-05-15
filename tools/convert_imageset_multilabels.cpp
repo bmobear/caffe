@@ -42,6 +42,7 @@ DEFINE_bool(encoded, false,
     "When this option is on, the encoded image will be save in datum");
 DEFINE_string(encode_type, "",
     "Optional: What type should we encode the image as ('png','jpg',...).");
+DEFINE_int32(num_label, 2, "Number of labels");
 
 int main(int argc, char** argv) {
 #ifdef USE_OPENCV
@@ -70,28 +71,30 @@ int main(int argc, char** argv) {
   const bool check_size = FLAGS_check_size;
   const bool encoded = FLAGS_encoded;
   const string encode_type = FLAGS_encode_type;
+  int num_label = std::max<int>(2, FLAGS_num_label);
 
   std::ifstream infile(argv[2]);
   std::vector<std::pair<std::string, int> > lines;
-  std::vector<std::pair<int, int> > labels;
+  std::vector<std::vector<int> > labels;
   std::string line;
   char delim = ' ';
   while (std::getline(infile, line)) {
     stringstream ss(line);
-    std::string fileloc, label_1, label_2, label_3;
-    std::getline(ss, fileloc, delim); 
-    std::getline(ss, label_1, delim);
-    std::getline(ss, label_2, delim);
-//    std::getline(ss, label_3, delim);
+    std::string fileloc, label;
+    std::vector<int> multilabels;
+    std::getline(ss, fileloc, delim);
+    for(int i=0; i<num_label; i++) {
+      std::getline(ss, label, delim);
+      multilabels.push_back(atoi(label.c_str()));
+    }
 
     lines.push_back(std::make_pair(fileloc, 0));
-//    labels.push_back(std::make_pair(atoi(label_1.c_str()), atoi(label_2.c_str())*4+atoi(label_3.c_str())));
-    labels.push_back(std::make_pair(atoi(label_1.c_str()), atoi(label_2.c_str())));
+    labels.push_back(multilabels);
   }
 
-// debug
+  // debug
   LOG(INFO) << "lines[0] " << lines[0].first << " " << lines[0].second;
-  LOG(INFO) << "labels[0] " << labels[0].first << " " << labels[0].second;
+  LOG(INFO) << "labels[0] " << labels[0][0] << " " << labels[0][1];
 
   if (FLAGS_shuffle) {
     // randomly shuffle data
@@ -181,11 +184,16 @@ int main(int argc, char** argv) {
 
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
 
-    int label_data[] = {labels[line_id].first, labels[line_id].second};
-    datum_label.set_channels(2);
+    std::vector<int> label_data = labels[line_id];
+
+    datum_label.set_channels(label_data.size());
     datum_label.set_height(1);
     datum_label.set_width(1);
-    datum_label.set_data(label_data, 2);
+    std::string buffer(label_data.size(), ' ');
+    for(int i=0; i<label_data.size(); i++) {
+      buffer[i] = static_cast<char>(label_data[i]);
+    }
+    datum_label.set_data(buffer);
     datum_label.set_label(0);
 
     
